@@ -1,4 +1,5 @@
 
-function sign(payload : Object, ttl: number, key : string){
-    
+function sign(payload : Record<string,unknown>, ttlSeconds: number, key : string): string{
+    const message = JSON.stringify(payload);
+    return ""
 }
