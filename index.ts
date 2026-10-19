@@ -1,6 +1,9 @@
 import {createHmac} from "node:crypto"
 
-
+type verifyResult = 
+{status : "ok", payload : Record<string,unknown> }
+|
+{status : "rejected", reason : string};
 
 
 function sign(payload : Record<string,unknown>, ttlMs: number, key : string): string{
@@ -24,4 +27,11 @@ function sign(payload : Record<string,unknown>, ttlMs: number, key : string): st
 
 
     return encodedBody + "." + tag;
+}
+
+
+
+function verify(token : string, key : string):verifyResult{
+
+    
 }
