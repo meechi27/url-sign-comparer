@@ -7,11 +7,10 @@ function sign(payload : Record<string,unknown>, ttlMs: number, key : string): st
     // calc the current time
      
     const expiryDate = Date.now() + ttlMs;
-    const str_expiryDate = expiryDate.toString();
     
 
     // to make the data object as one chunk
-    const message = JSON.stringify({payload,expiry:str_expiryDate});
+    const message = JSON.stringify({payload,expiry:expiryDate});
 
     // make the machine with the key
     const tag = createHmac("sha256",key)
@@ -21,8 +20,8 @@ function sign(payload : Record<string,unknown>, ttlMs: number, key : string): st
 
     
     // encode the json string so that we can use it in the url safely
-    const encode = Buffer.from(message).toString("base64url");
+    const encodedBody = Buffer.from(message).toString("base64url");
 
 
-    return ""
+    return encodedBody + "." + tag;
 }
