@@ -33,45 +33,48 @@ function sign(payload: Record<string, unknown>, ttlMs: number, key: string): str
 
 function verify(token: string, key: string): verifyResult {
     const parts = token.split(".");
-    let data;
+    if (parts.length !== 2 || parts[0] === "" || parts[1] === "")
+        return { status: "rejected", reason: "Malformed token" };
 
+    const [encodedBody, fingerPrint] = parts;
+    if (!/^[A-Za-z0-9_-]+$/.test(encodedBody))
+        return { status: "rejected", reason: "Malformed token" };
 
-    if (parts.length !== 2)
-        return { status: "rejected", reason: "Malformed JSON" };
-    if (parts[0] === "" || parts[1] === "")
-        return { status: "rejected", reason: "Malformed JSON" };
+    if (!/^[a-fA-F0-9]{64}$/.test(fingerPrint))
+        return { status: "rejected", reason: "Invalid token signature" };
 
-
-    const fingerPrint = parts[1];
-    const decoded = Buffer.from(parts[0], "base64url").toString();
+    const decoded = Buffer.from(encodedBody, "base64url").toString();
+    let data: unknown;
 
     try {
         data = JSON.parse(decoded);
     } catch {
-        return { status: "rejected", reason: "Malformed JSON" }
+        return { status: "rejected", reason: "Malformed token payload" };
     }
 
-    // make the machine with the key
     const tag = createHmac("sha256", key)
-        .update(decoded) //add a decoded message to it (added in a list and get concatenated)
-        .digest("hex"); // actually returns the result as hex representation
+        .update(decoded)
+        .digest("hex");
 
     const hexFingerPrint = Buffer.from(fingerPrint, "hex");
     const hexTag = Buffer.from(tag, "hex");
 
-
-
-    // check wether the token equals 
-    if (hexFingerPrint.length !== hexTag.length) 
-        return { status: "rejected", reason: "Invalid fingerprint" };
+    if (hexFingerPrint.length !== hexTag.length)
+        return { status: "rejected", reason: "Invalid token signature" };
     if (!timingSafeEqual(hexTag, hexFingerPrint))
-        return { status: "rejected", reason: "Invalid fingerprint" };
-   
+        return { status: "rejected", reason: "Invalid token signature" };
 
+    if (typeof data !== "object" || data === null || Array.isArray(data))
+        return { status: "rejected", reason: "Invalid token payload" };
 
+    const tokenData = data as Record<string, unknown>;
+    if (typeof tokenData.expiry !== "number" || !Number.isFinite(tokenData.expiry))
+        return { status: "rejected", reason: "Invalid token expiry" };
+    if (tokenData.expiry <= Date.now())
+        return { status: "rejected", reason: "Token expired" };
+    if (typeof tokenData.payload !== "object" || tokenData.payload === null || Array.isArray(tokenData.payload))
+        return { status: "rejected", reason: "Invalid token payload" };
 
-
-
-    return { status: "ok", payload: data.payload }
+    return { status: "ok", payload: tokenData.payload as Record<string, unknown> };
 
 }
