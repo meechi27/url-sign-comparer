@@ -104,3 +104,5 @@ function verify(token: string, key: string): VerifyResult {
     return { status: "ok", payload: tokenData.payload as Record<string, unknown> };
 
 }
+
+export {sign,verify}
