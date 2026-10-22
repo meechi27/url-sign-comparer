@@ -6,12 +6,15 @@ type VerifyResult =
     { status: "rejected", reason: string };
 
 
-    // TODO:add a check for the optimal key format so we can be more precise
+  
 
 
 
 function sign(payload: Record<string, unknown>, ttlMs: number, key: string): string {
-    if (!key) throw new Error("key must be non-empty")
+    
+    // we check for non-empty and valid key 
+    if (!key || Buffer.byteLength(key, "utf8") < 32)
+    throw new Error("key must be at least 32 bytes");
 
     if (!Number.isFinite(ttlMs) || ttlMs <= 0)
         throw new Error("ttlMs must be a positive finite number");
@@ -44,7 +47,11 @@ function sign(payload: Record<string, unknown>, ttlMs: number, key: string): str
 
 
 function verify(token: string, key: string): VerifyResult {
-    if (!key) throw new Error("key must be non-empty")
+    
+    if (!key || Buffer.byteLength(key, "utf8") < 32)
+    throw new Error("key must be at least 32 bytes");
+
+
     // split the token into fingerprint and data part -- then check if it has 2 parts that are non empty  
     const parts = token.split(".");
     if (parts.length !== 2 || parts[0] === "" || parts[1] === "")
