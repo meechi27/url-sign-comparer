@@ -17,9 +17,9 @@ it("test wether sign resulted token is valid", () => {
 })
 
 
-it("test wether valid case by code does not throw",()=>{
+it("test specific error to throw",()=>{
     const payloadTest = { user_id: 24 }
     const ttlMsTest = 5 * 10000
     const key = "test-only-secret-key-0123456789-abcdef";
-    expect(()=>sign(payloadTest,1,key)).not.toThrow();
+    expect(()=>sign(payloadTest,0,key)).toThrow("ttlMs must be a positive finite number");
 })
