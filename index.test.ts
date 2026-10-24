@@ -371,7 +371,7 @@ it("rejects a non-canonical Base64URL body", () => {
     const lastChar = body.at(-1)!;
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
     const index = alphabet.indexOf(lastChar);
-    const replacement = alphabet[index & 48];
+    const replacement = alphabet[(index & 48) + 1];
 
     const nonCanonicalBody = body.slice(0, -1) + replacement;
 
