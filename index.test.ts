@@ -355,3 +355,30 @@ describe("additional edge cases", () => {
         });
     });
 });
+
+it("rejects a non-canonical Base64URL body", () => {
+    const message = JSON.stringify({
+        payload: { user_id: 24 },
+        expiry: Date.now() + 60_000
+    });
+
+    const body = Buffer.from(message).toString("base64url");
+    const signature = createHmac("sha256", key)
+        .update(message)
+        .digest("hex");
+
+    // Change the last Base64URL character without changing decoded bytes.
+    const lastChar = body.at(-1)!;
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    const index = alphabet.indexOf(lastChar);
+    const replacement = alphabet[index & 48];
+
+    const nonCanonicalBody = body.slice(0, -1) + replacement;
+
+    expect(Buffer.from(nonCanonicalBody, "base64url")).toEqual(
+        Buffer.from(body, "base64url")
+    );
+
+    expect(verify(`${nonCanonicalBody}.${signature}`, key).status)
+        .toBe("rejected");
+});

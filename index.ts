@@ -6,15 +6,15 @@ type VerifyResult =
     { status: "rejected", reason: string };
 
 
-  
+
 
 
 
 function sign(payload: Record<string, unknown>, ttlMs: number, key: string): string {
-    
+
     // we check for non-empty and valid key 
     if (!key || Buffer.byteLength(key, "utf8") < 32)
-    throw new Error("key must be at least 32 bytes");
+        throw new Error("key must be at least 32 bytes");
 
     if (!Number.isFinite(ttlMs) || ttlMs <= 0)
         throw new Error("ttlMs must be a positive finite number");
@@ -47,9 +47,9 @@ function sign(payload: Record<string, unknown>, ttlMs: number, key: string): str
 
 
 function verify(token: string, key: string): VerifyResult {
-    
+
     if (!key || Buffer.byteLength(key, "utf8") < 32)
-    throw new Error("key must be at least 32 bytes");
+        throw new Error("key must be at least 32 bytes");
 
 
     // split the token into fingerprint and data part -- then check if it has 2 parts that are non empty  
@@ -65,7 +65,16 @@ function verify(token: string, key: string): VerifyResult {
     if (!/^[a-fA-F0-9]{64}$/.test(fingerPrint))
         return { status: "rejected", reason: "Invalid token signature" };
 
+    
+    
     const decoded = Buffer.from(encodedBody, "base64url").toString();
+
+
+    if (Buffer.from(decoded).toString("base64url") !== encodedBody)
+        return { status: "rejected", reason: "Malformed token" };
+
+
+    
     let data: unknown;
     // takes the data and turn it into JSON
     try {
@@ -105,4 +114,4 @@ function verify(token: string, key: string): VerifyResult {
 
 }
 
-export {sign,verify}
+export { sign, verify }
